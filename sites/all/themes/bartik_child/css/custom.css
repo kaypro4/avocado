@@ -1,0 +1,11 @@
+.status-Open{
+	color:green;
+}
+
+.status-In.Progress{
+	color: orange;
+}
+
+.status-Done{
+	color: gray;
+}
