@@ -1,0 +1,64 @@
+#!/bin/bash
+# This deploy hook gets executed after dependencies are resolved and the
+# build hook has been run but before the application has been started back
+# up again.  This script gets executed directly, so it could be python, php,
+# ruby, etc.
+
+DRUPAL_SETTINGS=$OPENSHIFT_REPO_DIR/sites/default/settings.php
+
+# check and set that the default directory exists in the repo
+if [ ! -d "$OPENSHIFT_REPO_DIR/sites/default" ]; then
+    mkdir $OPENSHIFT_REPO_DIR/sites/default
+    # mkdir $OPENSHIFT_REPO_DIR/sites/default/files
+    echo !!! created sites/default directory 
+
+else
+    echo !!! default directory already exists in repo
+fi
+
+# check and set the symlink for files dir
+if [ ! -d "$OPENSHIFT_REPO_DIR/sites/default/files" ]; then
+
+    ln -s $OPENSHIFT_DATA_DIR/files $OPENSHIFT_REPO_DIR/sites/default/files
+
+    echo !!! created sites/default/files symlink
+
+    chmod -R 0755 $OPENSHIFT_DATA_DIR/files
+
+    echo !!! permissions have been set on sites/default/files directory
+
+else
+    echo !!! sites directory already exists - skipping symlink...
+fi
+
+# check and set the symlink for private dir
+if [ ! -d "$OPENSHIFT_REPO_DIR/sites/default/private" ]; then
+
+    ln -s $OPENSHIFT_DATA_DIR/private $OPENSHIFT_REPO_DIR/sites/default/private
+
+    echo !!! created sites/default/private symlink
+
+    chmod -R 0750 $OPENSHIFT_DATA_DIR/private
+
+    echo !!! permissions have been set on sites/default/private directory
+
+else
+    echo !!! private directory already exists - skipping symlink...
+fi
+
+
+chmod -R 0755 $OPENSHIFT_REPO_DIR/sites/default
+if [ -f "$DRUPAL_SETTINGS" ]; then
+	rm $DRUPAL_SETTINGS
+	echo !!! old settings file removed
+fi
+
+cp $OPENSHIFT_DATA_DIR/settings.php $DRUPAL_SETTINGS
+echo !!! new settings file copied into repo
+
+chmod -R 0755 $OPENSHIFT_REPO_DIR/sites/default
+chmod 0400 $DRUPAL_SETTINGS
+echo !!! perms set on sites default and settings file
+
+cp $OPENSHIFT_DATA_DIR/.htaccess $OPENSHIFT_REPO_DIR/.htaccess
+echo !!! htaccess copied from data dir to repo root
